@@ -270,26 +270,31 @@ export default function App() {
  const fetchAIQuestions = async (topicName: string) => {
     setIsLoading(true);
     try {
+      // Latest model name
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
-      // Smart Prompt jo topic ke hisaab se sawal mangega
       const prompt = `Generate 10 hard multiple choice questions about "${topicName}" of Rajasthan in Hindi. 
-      Return ONLY a JSON array with this structure: 
-      [{"question": "...", "options": ["a", "b", "c", "d"], "correctAnswer": 0}] 
-      Do not include markdown or backticks.`;
-      
+      Return ONLY a JSON array: [{"question": "...", "options": ["a", "b", "c", "d"], "correctAnswer": 0}]. 
+      Do not include any markdown, backticks or code blocks.`;
+
       const result = await model.generateContent(prompt);
-      const text = result.response.text();
+      const response = await result.response;
+      const text = response.text().trim();
+      
+      // JSON ko saaf karne ka pakka tarika
       const cleanJson = text.replace(/```json|```/g, "").trim();
       const data = JSON.parse(cleanJson);
       
       setActiveQuestions(data);
       setCurrentQuestionIndex(0);
       setScore(0);
+      setAnswers([]);
+      setIsAnswered(false);
       setView('quiz');
     } catch (error) {
-      console.error("AI Error:", error);
-      alert("Is topic ke sawal taiyar nahi ho paye, kripya dubara koshish karein.");
+      console.error("Gemini Error:", error);
+      alert("AI connect nahi ho pa raha. Purana quiz chalu kar raha hoon.");
+      startQuiz('All');
     }
     setIsLoading(false);
   };  // Initialize
