@@ -267,28 +267,32 @@ export default function App() {
   const [quizHistory, setQuizHistory] = useState<QuizHistoryItem[]>([]);
   const [streak, setStreak] = useState(0);
 // AI se sawal mangne wala function
-  const fetchAIQuestions = async () => {
+ const fetchAIQuestions = async (topicName: string) => {
     setIsLoading(true);
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-      const prompt = "Generate 15 multiple choice questions on Rajasthan GK in Hindi. Format: JSON array of objects with question, options (array of 4 strings), and correctAnswer (index 0-3).";
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      // Smart Prompt jo topic ke hisaab se sawal mangega
+      const prompt = `Generate 10 hard multiple choice questions about "${topicName}" of Rajasthan in Hindi. 
+      Return ONLY a JSON array with this structure: 
+      [{"question": "...", "options": ["a", "b", "c", "d"], "correctAnswer": 0}] 
+      Do not include markdown or backticks.`;
       
       const result = await model.generateContent(prompt);
       const text = result.response.text();
-      const cleanJson = text.replace(/```json|```/g, "");
+      const cleanJson = text.replace(/```json|```/g, "").trim();
       const data = JSON.parse(cleanJson);
       
-      setActiveQuestions(data); 
-      setView('quiz'); 
+      setActiveQuestions(data);
       setCurrentQuestionIndex(0);
       setScore(0);
+      setView('quiz');
     } catch (error) {
-      console.error("Api Error:", error);
-      alert("API connect nahi ho raha. Console check karein.");
+      console.error("AI Error:", error);
+      alert("Is topic ke sawal taiyar nahi ho paye, kripya dubara koshish karein.");
     }
     setIsLoading(false);
-  };
-  // Initialize
+  };  // Initialize
   useEffect(() => {
     const allSubTopics = Object.values(SUB_TOPICS).flat();
     const shuffled = [...allSubTopics].sort(() => 0.5 - Math.random());
